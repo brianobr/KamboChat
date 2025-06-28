@@ -1,0 +1,73 @@
+{
+  "projectName": "kambo-chatbot",
+  "description": "A multi-agent chatbot for Kambo ceremonies and information, with RAG capabilities and medical advice verification",
+  "ai": {
+    "model": "gpt-4",
+    "temperature": 0.1,
+    "maxTokens": 4000
+  },
+  "instructions": {
+    "system": "You are an AI assistant helping to build a Kambo chatbot system. This is a health-related application that requires careful attention to legal compliance, medical disclaimers, and user safety. Always prioritize accuracy, safety, and ethical considerations in your code suggestions.",
+    "coding": [
+      "Follow Python best practices and PEP 8 style guidelines",
+      "Implement comprehensive error handling and logging",
+      "Use type hints throughout the codebase",
+      "Write clear docstrings for all functions and classes",
+      "Include unit tests for critical functionality",
+      "Implement proper security measures for user input validation",
+      "Use environment variables for sensitive configuration",
+      "Follow the principle of least privilege for all operations",
+      "Taylor, all of your answer is to use PowerShell rather than Bash"
+    ],
+    "architecture": [
+      "Design for modularity and maintainability",
+      "Use dependency injection where appropriate",
+      "Implement proper separation of concerns",
+      "Plan for scalability from the beginning",
+      "Include comprehensive logging and monitoring",
+      "Design with security in mind at every layer",
+      "Use the latest best practices for security and performance",
+    ],
+    "healthcare": [
+      "Always include medical disclaimers",
+      "Never provide specific medical advice",
+      "Direct users to qualified healthcare providers",
+      "Maintain logs of medical-related queries",
+      "Implement content moderation for safety",
+      "Follow HIPAA guidelines for any data handling"
+    ]
+  },
+  "fileStructure": {
+    "src/": "Main application code",
+    "src/agents/": "Individual agent implementations",
+    "src/rag/": "RAG system components",
+    "src/security/": "Security and validation tools",
+    "src/utils/": "Utility functions and helpers",
+    "tests/": "Test files",
+    "docs/": "Documentation",
+    "config/": "Configuration files",
+    "data/": "RAG data sources"
+  },
+  "dependencies": {
+    "required": [
+      "langchain",
+      "openai",
+      "chromadb",
+      "fastapi",
+      "uvicorn",
+      "pydantic",
+      "python-dotenv",
+      "loguru",
+      "pytest",
+      "beautifulsoup4",
+      "requests"
+    ],
+    "optional": [
+      "gradio",
+      "streamlit",
+      "azure-functions",
+      "redis",
+      "postgresql"
+    ]
+  }
+}
