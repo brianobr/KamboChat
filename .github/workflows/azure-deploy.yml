@@ -9,7 +9,7 @@ on:
 env:
   AZURE_WEBAPP_NAME: kambo-chatbot-app    # Change this to your app name
   AZURE_WEBAPP_PACKAGE_PATH: '.'
-git   PYTHON_VERSION: '3.11'
+  PYTHON_VERSION: '3.11'
 
 jobs:
   build-and-deploy:
