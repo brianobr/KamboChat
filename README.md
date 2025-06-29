@@ -129,7 +129,6 @@ Set these in Azure App Service Configuration:
 ```
 # Required for Key Vault
 AZURE_KEY_VAULT_URL=https://your-vault.vault.azure.net/
-AZURE_CLIENT_ID=<managed_identity_client_id>
 
 # Optional (for fallback)
 OPENAI_MODEL=gpt-4

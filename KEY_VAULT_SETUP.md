@@ -134,8 +134,7 @@ In your Azure App Service, set these environment variables:
 ### Required Environment Variables
 
 ```
-AZURE_KEY_VAULT_URL=https://kambo-chatbot-vault.vault.azure.net/
-AZURE_CLIENT_ID=<managed_identity_client_id>
+AZURE_KEY_VAULT_URL=https://kv-kambohealing-scus.vault.azure.net/
 ```
 
 ### Optional Environment Variables (for fallback)
@@ -163,7 +162,7 @@ az login
 
 2. Set environment variables:
 ```bash
-export AZURE_KEY_VAULT_URL=https://kambo-chatbot-vault.vault.azure.net/
+export AZURE_KEY_VAULT_URL=https://kv-kambohealing-scus.vault.azure.net/
 ```
 
 3. Test the application:

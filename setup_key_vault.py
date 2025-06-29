@@ -25,7 +25,7 @@ def check_azure_cli():
 def check_environment_variables():
     """Check if required environment variables are set"""
     required_vars = ['AZURE_KEY_VAULT_URL']
-    optional_vars = ['AZURE_CLIENT_ID', 'OPENAI_API_KEY', 'SECRET_KEY']
+    optional_vars = ['OPENAI_API_KEY', 'SECRET_KEY']
     
     print("\n🔍 Checking environment variables...")
     
@@ -120,8 +120,7 @@ def setup_instructions():
     print("   az keyvault set-policy --name kambo-chatbot-vault --object-id <principal_id> --secret-permissions get list")
     
     print("\n5. 🌍 Set environment variables in Azure App Service:")
-    print("   AZURE_KEY_VAULT_URL=https://kambo-chatbot-vault.vault.azure.net/")
-    print("   AZURE_CLIENT_ID=<managed_identity_client_id>")
+    print("   AZURE_KEY_VAULT_URL=https://kv-kambohealing-scus.vault.azure.net/")
     
     print("\n📖 For detailed instructions, see KEY_VAULT_SETUP.md")
 

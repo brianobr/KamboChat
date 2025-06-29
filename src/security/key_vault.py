@@ -17,7 +17,7 @@ class KeyVaultManager:
         Initialize Key Vault manager
         
         Args:
-            vault_url: Azure Key Vault URL (e.g., https://your-vault.vault.azure.net/)
+            vault_url: Azure Key Vault URL (e.g., https://kv-kambohealing-scus.vault.azure.net/)
         """
         self.vault_url = vault_url or os.getenv("AZURE_KEY_VAULT_URL")
         
@@ -28,14 +28,8 @@ class KeyVaultManager:
             
         try:
             # Use Managed Identity in Azure, fallback to DefaultAzureCredential
-            if os.getenv("AZURE_CLIENT_ID"):
-                # App Service with managed identity
-                credential = ManagedIdentityCredential(client_id=os.getenv("AZURE_CLIENT_ID"))
-                logger.info("Using Managed Identity for Key Vault authentication")
-            else:
-                # Local development or other scenarios
-                credential = DefaultAzureCredential()
-                logger.info("Using DefaultAzureCredential for Key Vault authentication")
+            credential = DefaultAzureCredential()
+            logger.info("Using DefaultAzureCredential for Key Vault authentication")
                 
             self.client = SecretClient(vault_url=self.vault_url, credential=credential)
             logger.info(f"Key Vault client initialized for: {self.vault_url}")

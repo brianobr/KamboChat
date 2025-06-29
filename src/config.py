@@ -57,7 +57,6 @@ class Settings(BaseSettings):
     
     # === Azure Key Vault ===
     azure_key_vault_url: Optional[str] = Field(default=None, env="AZURE_KEY_VAULT_URL")
-    azure_client_id: Optional[str] = Field(default=None, env="AZURE_CLIENT_ID")
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
