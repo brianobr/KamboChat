@@ -3,6 +3,7 @@ Main application entry point for the Kambo chatbot
 """
 
 import asyncio
+import os
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from loguru import logger
@@ -88,9 +89,12 @@ async def root():
 
 
 if __name__ == "__main__":
+    # Get port from environment variable (Azure App Service sets HTTP_PLATFORM_PORT)
+    port = int(os.environ.get("PORT", os.environ.get("HTTP_PLATFORM_PORT", settings.port)))
+    
     uvicorn.run(
         "main:app",
         host=settings.host,
-        port=settings.port,
+        port=port,
         reload=settings.debug
     ) 

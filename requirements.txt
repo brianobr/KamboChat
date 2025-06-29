@@ -13,6 +13,10 @@ alembic>=1.12.0
 # Security and validation
 python-multipart>=0.0.6
 
+# Azure Key Vault for secure secret management
+azure-identity>=1.15.0
+azure-keyvault-secrets>=4.7.0
+
 # LangChain and LLM dependencies
 langchain>=0.3.0
 langchain-openai>=0.3.0

@@ -12,6 +12,7 @@ A multi-agent chatbot system for providing information about Kambo ceremonies an
 - **Compliance**: Built-in medical disclaimers and safety measures
 - **Database**: Conversation logging and security event tracking
 - **LangChain Integration**: Modern LLM orchestration framework
+- **Azure Key Vault**: Secure secret management for production
 
 ## Architecture
 
@@ -64,18 +65,25 @@ flowchart TD
 - **Knowledge Base**: Manages RAG data sources
 - **Input Validator**: Security and input validation
 - **Database**: SQLAlchemy models for data persistence
+- **Key Vault Manager**: Secure secret management
 
 ## Setup
+
+### Local Development
 
 1. Install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
 
-2. Create `.env` file:
+2. Set up Azure Key Vault (recommended) or use environment variables:
 ```bash
-cp .env.example .env
-# Edit .env with your actual values
+# Option A: Use Key Vault (recommended for production)
+export AZURE_KEY_VAULT_URL=https://your-vault.vault.azure.net/
+
+# Option B: Use environment variables (for development)
+export OPENAI_API_KEY=your_openai_api_key_here
+export SECRET_KEY=your_secret_key_here
 ```
 
 3. Run the application:
@@ -86,6 +94,62 @@ python main.py
 4. Access the API:
 - API Documentation: http://localhost:8000/docs
 - Health Check: http://localhost:8000/health
+
+### Key Vault Setup
+
+For production deployment, use Azure Key Vault for secure secret management:
+
+1. **Test Key Vault setup:**
+```bash
+python setup_key_vault.py
+```
+
+2. **Follow the detailed setup guide:**
+See [KEY_VAULT_SETUP.md](KEY_VAULT_SETUP.md) for complete instructions.
+
+## Deployment
+
+### Azure App Service Deployment
+
+This application is configured for deployment to Azure App Services using GitHub Actions with Key Vault integration.
+
+#### Quick Deploy
+
+1. **Fork/Clone** this repository to your GitHub account
+2. **Create Azure Key Vault** and add secrets (see [KEY_VAULT_SETUP.md](KEY_VAULT_SETUP.md))
+3. **Create Azure App Service** (Python 3.11 runtime)
+4. **Configure Environment Variables** in Azure Portal
+5. **Add GitHub Secret** `AZURE_WEBAPP_PUBLISH_PROFILE`
+6. **Push to main branch** - automatic deployment will trigger
+
+#### Environment Variables Required
+
+Set these in Azure App Service Configuration:
+
+```
+# Required for Key Vault
+AZURE_KEY_VAULT_URL=https://your-vault.vault.azure.net/
+AZURE_CLIENT_ID=<managed_identity_client_id>
+
+# Optional (for fallback)
+OPENAI_MODEL=gpt-4
+DATABASE_URL=sqlite:///./kambo_chatbot.db
+APP_NAME=Kambo Chatbot
+DEBUG=False
+LOG_LEVEL=INFO
+HOST=0.0.0.0
+PORT=8000
+```
+
+#### Deployment Files
+
+- `.github/workflows/azure-deploy.yml` - GitHub Actions workflow
+- `startup.sh` - Azure App Service startup script
+- `web.config` - IIS configuration for Windows hosting
+- `runtime.txt` - Python version specification
+- `azure.yaml` - Azure App Service configuration
+
+For detailed deployment instructions, see [DEPLOYMENT.md](DEPLOYMENT.md).
 
 ## Testing
 
@@ -102,6 +166,11 @@ python test_api.py
 ### Test LangChain Components
 ```bash
 python test_langchain.py
+```
+
+### Test Key Vault Integration
+```bash
+python setup_key_vault.py
 ```
 
 ## API Usage
@@ -134,6 +203,7 @@ curl -X POST "http://localhost:8000/chat" \
 - Maintain security best practices
 - Always include medical disclaimers
 - Use explicit graph patterns for complex workflows
+- Use Key Vault for secret management in production
 
 ## Safety & Compliance
 
@@ -143,6 +213,7 @@ curl -X POST "http://localhost:8000/chat" \
 - Input validation prevents malicious content
 - Comprehensive logging for audit trails
 - Medical verification ensures safety
+- Azure Key Vault provides HIPAA-compliant secret management
 
 ## Technical Details
 
@@ -151,6 +222,12 @@ curl -X POST "http://localhost:8000/chat" \
 - `RunnablePassthrough` for data flow between nodes
 - Async processing with `ainvoke`
 - Structured output parsing
+
+### Security Features
+- **Azure Key Vault**: Encrypted secret storage
+- **Managed Identity**: Secure authentication
+- **Input Validation**: XSS and injection protection
+- **Audit Logging**: Complete access tracking
 
 ### Graph Benefits
 - **Visibility**: Clear data flow and routing logic
@@ -161,9 +238,9 @@ curl -X POST "http://localhost:8000/chat" \
 
 ## Next Steps
 
-1. **Add OpenAI Integration**: Implement actual LLM responses
-2. **Enhance RAG**: Add vector search and document processing
-3. **Add Authentication**: User management system
-4. **Deploy**: Choose hosting platform (Azure, Vercel, etc.)
-5. **Monitoring**: Add analytics and monitoring
+1. **Deploy to Azure**: Use the provided deployment configuration
+2. **Set up Key Vault**: Follow the security setup guide
+3. **Add Monitoring**: Configure Application Insights
+4. **Enhance RAG**: Add vector search and document processing
+5. **Add Authentication**: User management system
 6. **Graph Visualization**: Add tools to visualize the execution graph 

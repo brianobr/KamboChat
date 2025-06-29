@@ -7,12 +7,14 @@ from typing import List, Optional
 from pydantic_settings import BaseSettings
 from pydantic import Field
 
+from .security.key_vault import get_secret
+
 
 class Settings(BaseSettings):
     """Application settings with validation"""
     
-    # === API Keys ===
-    openai_api_key: str = Field(..., env="OPENAI_API_KEY")
+    # === API Keys (from Key Vault or environment) ===
+    openai_api_key: str = Field(default="", env="OPENAI_API_KEY")
     openai_model: str = Field(default="gpt-4", env="OPENAI_MODEL")
     
     # === Database ===
@@ -52,6 +54,27 @@ class Settings(BaseSettings):
     # === Hosting ===
     host: str = Field(default="0.0.0.0", env="HOST")
     port: int = Field(default=8000, env="PORT")
+    
+    # === Azure Key Vault ===
+    azure_key_vault_url: Optional[str] = Field(default=None, env="AZURE_KEY_VAULT_URL")
+    azure_client_id: Optional[str] = Field(default=None, env="AZURE_CLIENT_ID")
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._load_secrets_from_key_vault()
+    
+    def _load_secrets_from_key_vault(self):
+        """Load sensitive values from Azure Key Vault with fallback to environment variables"""
+        
+        # Load OpenAI API key from Key Vault
+        key_vault_openai_key = get_secret("openai-api-key", "OPENAI_API_KEY")
+        if key_vault_openai_key:
+            self.openai_api_key = key_vault_openai_key
+        
+        # Load secret key from Key Vault
+        key_vault_secret_key = get_secret("app-secret-key", "SECRET_KEY")
+        if key_vault_secret_key:
+            self.secret_key = key_vault_secret_key
     
     class Config:
         env_file = ".env"
