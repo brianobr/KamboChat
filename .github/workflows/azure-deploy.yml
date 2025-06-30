@@ -29,11 +29,16 @@ jobs:
         python -m venv venv
         source venv/bin/activate
 
+    - name: Setup uv
+      uses: astral-sh/setup-uv@v1
+      with:
+        version: latest
+
     - name: Install dependencies
-      run: |
-        source venv/bin/activate
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
+      run: uv sync --frozen
+
+    - name: Generate requirements.txt for Azure
+      run: uv pip freeze > requirements.txt
 
     - name: Run tests (optional)
       run: |

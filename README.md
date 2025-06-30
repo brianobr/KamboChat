@@ -69,14 +69,60 @@ flowchart TD
 
 ## Setup
 
-### Local Development
+### Prerequisites
 
-1. Install dependencies:
+1. **Install uv** (recommended package manager):
 ```bash
-pip install -r requirements.txt
+# On Windows (PowerShell)
+powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+
+# On macOS/Linux
+curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
-2. Set up Azure Key Vault (recommended) or use environment variables:
+2. **Install Python 3.11+** (if not already installed)
+
+### Migration from pip to uv
+
+If you're migrating from an existing pip-based setup:
+
+1. **Run the migration script**:
+```bash
+python migrate_to_uv.py
+```
+
+2. **Follow the instructions** provided by the migration script
+
+3. **Clean up old files** (optional):
+```bash
+# Remove old virtual environment
+rm -rf venv/ .venv/ env/
+
+# Remove old requirements.txt (backup created automatically)
+rm requirements.txt
+```
+
+### Local Development
+
+1. **Clone the repository**:
+```bash
+git clone <your-repo-url>
+cd kambo_chatbot
+```
+
+2. **Install dependencies with uv**:
+```bash
+# Install all dependencies
+uv sync
+
+# Or install with development dependencies
+uv sync --dev
+
+# Or install with optional dependencies
+uv sync --all-extras
+```
+
+3. **Set up Azure Key Vault** (recommended) or use environment variables:
 ```bash
 # Option A: Use Key Vault (recommended for production)
 export AZURE_KEY_VAULT_URL=https://your-vault.vault.azure.net/
@@ -86,14 +132,30 @@ export OPENAI_API_KEY=your_openai_api_key_here
 export SECRET_KEY=your_secret_key_here
 ```
 
-3. Run the application:
+4. **Run the application**:
 ```bash
-python main.py
+uv run python main.py
 ```
 
-4. Access the API:
+5. **Access the API**:
 - API Documentation: http://localhost:8000/docs
 - Health Check: http://localhost:8000/health
+
+### Alternative: Using uv with virtual environment
+
+If you prefer to work with a virtual environment:
+
+```bash
+# Create and activate virtual environment
+uv venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+
+# Install dependencies
+uv pip install -e .
+
+# Run the application
+python main.py
+```
 
 ### Key Vault Setup
 
@@ -101,7 +163,7 @@ For production deployment, use Azure Key Vault for secure secret management:
 
 1. **Test Key Vault setup:**
 ```bash
-python setup_key_vault.py
+uv run python setup_key_vault.py
 ```
 
 2. **Follow the detailed setup guide:**
@@ -154,22 +216,22 @@ For detailed deployment instructions, see [DEPLOYMENT.md](DEPLOYMENT.md).
 
 ### Test the Explicit Graph
 ```bash
-python test_explicit_graph.py
+uv run python test_explicit_graph.py
 ```
 
 ### Test the API
 ```bash
-python test_api.py
+uv run python test_api.py
 ```
 
 ### Test LangChain Components
 ```bash
-python test_langchain.py
+uv run python test_langchain.py
 ```
 
 ### Test Key Vault Integration
 ```bash
-python setup_key_vault.py
+uv run python setup_key_vault.py
 ```
 
 ## API Usage

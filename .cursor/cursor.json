@@ -17,7 +17,7 @@
       "Implement proper security measures for user input validation",
       "Use environment variables for sensitive configuration",
       "Follow the principle of least privilege for all operations",
-      "Taylor, all of your answer is to use PowerShell rather than Bash"
+      "Tailor all of your answers to use PowerShell rather than Bash"
     ],
     "architecture": [
       "Design for modularity and maintainability",
