@@ -19,16 +19,6 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ env.PYTHON_VERSION }}
-
-    - name: Create and start virtual environment
-      run: |
-        python -m venv venv
-        source venv/bin/activate
-
     - name: Setup uv
       uses: astral-sh/setup-uv@v1
       with:
@@ -36,15 +26,6 @@ jobs:
 
     - name: Install dependencies
       run: uv sync --frozen
-
-    - name: Generate requirements.txt for Azure
-      run: uv pip freeze > requirements.txt
-
-    - name: Run tests (optional)
-      run: |
-        source venv/bin/activate
-        # Uncomment if you have tests
-        # python -m pytest
 
     - name: Azure Login
       uses: azure/login@v1

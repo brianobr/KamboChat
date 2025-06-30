@@ -6,20 +6,14 @@
 # Set the working directory
 cd /home/site/wwwroot
 
-# Install dependencies if needed
-if [ ! -d "venv" ]; then
-    echo "Creating virtual environment..."
-    python -m venv venv
+# Install uv if not present
+if ! command -v uv &> /dev/null; then
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+    export PATH="$HOME/.cargo/bin:$PATH"
 fi
 
-# Activate virtual environment
-source venv/bin/activate
-
-# Install/upgrade dependencies
-echo "Installing dependencies..."
-pip install --upgrade pip
-pip install -r requirements.txt
+# Install dependencies
+uv sync --frozen
 
 # Start the application
-echo "Starting Kambo Chatbot..."
-python main.py 
+uv run python main.py 
