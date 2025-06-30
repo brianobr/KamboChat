@@ -6,6 +6,7 @@ from typing import Dict, Any, Optional
 from loguru import logger
 import uuid
 from datetime import datetime
+import asyncio
 
 from langchain_core.runnables import RunnableSequence, RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
@@ -28,7 +29,7 @@ class Coordinator:
         logger.info("Graph coordinator initialized")
     
     def _build_graph(self) -> RunnableSequence:
-        """Build the explicit processing graph"""
+        """Build the optimized processing graph"""
         
         # Node 1: Input Validation
         def validate_input(inputs: Dict[str, Any]) -> Dict[str, Any]:
@@ -54,24 +55,7 @@ class Coordinator:
                 "user_id": user_id
             }
         
-        # Node 2: Safety Check (Kambo-related classification)
-        safety_llm = create_medical_verifier_llm()  # Deterministic for classification
-        safety_prompt = create_safety_check_prompt()
-        safety_chain = safety_prompt | safety_llm | StrOutputParser()
-        
-        def parse_safety_result(inputs: Dict[str, Any]) -> Dict[str, Any]:
-            """Parse the safety check result"""
-            safety_result = inputs["safety_check"].strip().upper()
-            is_kambo_related = "YES" in safety_result
-            
-            logger.info(f"Safety check: question is {'Kambo-related' if is_kambo_related else 'not Kambo-related'}")
-            
-            return {
-                **inputs,
-                "is_kambo_related": is_kambo_related
-            }
-        
-        # Node 3: Kambo Response Generation
+        # Node 2: Kambo Response Generation (Single LLM call)
         kambo_llm = create_kambo_llm()
         kambo_prompt = create_kambo_prompt()
         kambo_chain = kambo_prompt | kambo_llm | StrOutputParser()
@@ -92,23 +76,7 @@ class Coordinator:
                 "user_id": inputs["validation"]["user_id"]
             }
         
-        # Edge 2: Route based on safety check
-        def route_after_safety(inputs: Dict[str, Any]) -> Dict[str, Any]:
-            """Route based on whether question is Kambo-related"""
-            if not inputs["safety_result"]["is_kambo_related"]:
-                return {
-                    "route": "reject",
-                    "message": "I can only answer questions related to Kambo ceremonies and traditional Amazonian medicine. Please ask about Kambo-related topics.",
-                    "user_id": inputs["safety_result"]["user_id"]
-                }
-            
-            return {
-                "route": "kambo",
-                "question": inputs["safety_result"]["sanitized_message"],
-                "user_id": inputs["safety_result"]["user_id"]
-            }
-        
-        # Build the explicit graph
+        # Build the optimized graph
         graph = (
             # Start with user input
             {"user_message": RunnablePassthrough(), "user_id": RunnablePassthrough()}
@@ -123,39 +91,22 @@ class Coordinator:
                 routing=route_after_validation
             )
             | RunnablePassthrough.assign(
-                # Node 2: Safety Check (only if validation passed)
-                safety_check=lambda x: safety_chain.invoke({"question": x["routing"]["sanitized_message"]})
-                if x["routing"]["route"] == "continue" else "NO"
-            )
-            | RunnablePassthrough.assign(
-                # Parse safety result
-                safety_result=lambda x: parse_safety_result({
-                    "safety_check": x["safety_check"],
-                    "sanitized_message": x["routing"]["sanitized_message"],
-                    "user_id": x["routing"]["user_id"]
-                }) if x["routing"]["route"] == "continue" else {"is_kambo_related": False}
-            )
-            | RunnablePassthrough.assign(
-                # Edge 2: Route after safety check
-                safety_routing=route_after_safety
-            )
-            | RunnablePassthrough.assign(
-                # Node 3: Kambo Response Generation (only if Kambo-related)
-                kambo_response=lambda x: kambo_chain.invoke({"question": x["safety_routing"]["question"]})
-                if x["safety_routing"]["route"] == "kambo" else "Not applicable"
+                # Node 2: Kambo Response Generation (only if validation passed)
+                kambo_response=lambda x: kambo_chain.invoke({"question": x["routing"]["sanitized_message"]})
+                if x["routing"]["route"] == "continue" else "Not applicable"
             )
             | RunnablePassthrough.assign(
                 final_routing=lambda x: {
                     "route": "success",
                     "response": x["kambo_response"],
-                    "user_id": x["safety_routing"]["user_id"],
+                    "user_id": x["routing"]["user_id"],
                     "metadata": {
                         "model": kambo_llm.model_name
                     }
-                } if x["safety_routing"]["route"] == "kambo" else {
-                    "route": "reject",
-                    "message": x["safety_routing"]["message"],
-                    "user_id": x["safety_routing"]["user_id"]
+                } if x["routing"]["route"] == "continue" else {
+                    "route": "error",
+                    "error": x["routing"]["error"],
+                    "user_id": x["routing"]["user_id"]
                 }
             )
         )
@@ -183,22 +134,14 @@ class Coordinator:
                     "error": result["routing"]["error"]
                 }
             
-            elif result["safety_routing"]["route"] == "reject":
-                return {
-                    "success": False,
-                    "response": result["safety_routing"]["message"],
-                    "conversation_id": conversation_id,
-                    "metadata": {"topic_check": "failed"}
-                }
-            
             elif result["final_routing"]["route"] == "success":
-                # Save to database
-                self._save_conversation(
+                # Save to database asynchronously (don't block response)
+                asyncio.create_task(self._save_conversation_async(
                     conversation_id, 
                     result["final_routing"]["user_id"], 
                     user_message, 
                     result["final_routing"]["response"]
-                )
+                ))
                 
                 return {
                     "success": True,
@@ -228,8 +171,45 @@ class Coordinator:
                 "error": str(e)
             }
     
+    async def _save_conversation_async(self, conversation_id: str, user_id: str, user_message: str, assistant_response: str):
+        """Save conversation to database asynchronously"""
+        try:
+            session = get_session()
+            
+            # Save conversation
+            conversation = Conversation(
+                id=conversation_id,
+                user_id=user_id,
+                meta={"source": "graph_chatbot"}
+            )
+            session.add(conversation)
+            
+            # Save user message
+            user_msg = Message(
+                conversation_id=conversation_id,
+                role="user",
+                content=user_message
+            )
+            session.add(user_msg)
+            
+            # Save assistant response
+            assistant_msg = Message(
+                conversation_id=conversation_id,
+                role="assistant",
+                content=assistant_response
+            )
+            session.add(assistant_msg)
+            
+            session.commit()
+            session.close()
+            
+            logger.info(f"Saved conversation {conversation_id} to database")
+            
+        except Exception as e:
+            logger.error(f"Error saving conversation: {e}")
+
     def _save_conversation(self, conversation_id: str, user_id: str, user_message: str, assistant_response: str):
-        """Save conversation to database"""
+        """Save conversation to database (synchronous version for backward compatibility)"""
         try:
             session = get_session()
             

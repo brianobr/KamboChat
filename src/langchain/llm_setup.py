@@ -10,7 +10,7 @@ from src.config import settings
 
 def create_llm(model_name: str = None, temperature: float = 0.0) -> BaseChatModel:
     """
-    Create a LangChain LLM instance with proper configuration
+    Create a LangChain LLM instance with optimized configuration for speed
     
     Args:
         model_name: OpenAI model name (defaults to config setting)
@@ -26,8 +26,8 @@ def create_llm(model_name: str = None, temperature: float = 0.0) -> BaseChatMode
             model=model,
             temperature=temperature,
             openai_api_key=settings.openai_api_key,
-            max_tokens=1000,  # Reasonable limit for chat responses
-            request_timeout=30,  # 30 second timeout
+            max_tokens=500,  # Reduced for faster responses
+            request_timeout=15,  # Reduced timeout for faster failure detection
         )
         
         logger.info(f"Created LangChain LLM: {model} (temperature: {temperature})")
