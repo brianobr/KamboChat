@@ -1,5 +1,5 @@
 """
-Test script for the explicit graph coordinator
+Test script for the graph coordinator
 """
 
 import asyncio
@@ -10,17 +10,17 @@ from loguru import logger
 # Add src to path
 sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
 
-from src.langchain.explicit_coordinator import ExplicitGraphCoordinator
+from src.langchain.coordinator import Coordinator
 from src.config import settings
 
 
-async def test_explicit_graph():
-    """Test the explicit graph coordinator"""
+async def test_graph():
+    """Test the graph coordinator"""
     
-    logger.info("Testing Explicit Graph Coordinator...")
+    logger.info("Testing Graph Coordinator...")
     
     # Initialize coordinator
-    coordinator = ExplicitGraphCoordinator()
+    coordinator = Coordinator()
     
     # Test cases
     test_cases = [
@@ -128,10 +128,10 @@ async def test_graph_visualization():
     logger.info("GRAPH STRUCTURE VISUALIZATION")
     logger.info("="*50)
     
-    coordinator = ExplicitGraphCoordinator()
+    coordinator = Coordinator()
     
     # Show the graph structure
-    logger.info("Explicit Graph Flow:")
+    logger.info("Graph Flow:")
     logger.info("1. Input Validation Node")
     logger.info("   ↓ (Edge: validation result)")
     logger.info("2. Safety Check Node (Kambo classification)")
@@ -158,10 +158,10 @@ if __name__ == "__main__":
         await test_graph_visualization()
         
         # Test actual processing
-        success = await test_explicit_graph()
+        success = await test_graph()
         
         if success:
-            logger.info("\n✅ All explicit graph tests completed successfully!")
+            logger.info("\n✅ All graph tests completed successfully!")
         else:
             logger.error("\n❌ Some tests failed!")
             sys.exit(1)

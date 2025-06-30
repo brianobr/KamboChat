@@ -1,5 +1,5 @@
 """
-Explicit graph-based coordinator using LangChain's RunnableSequence
+Graph-based coordinator using LangChain's RunnableSequence
 """
 
 from typing import Dict, Any, Optional
@@ -19,13 +19,13 @@ from src.database.connection import get_session
 from src.database.models import Conversation, Message, SecurityLog
 
 
-class ExplicitGraphCoordinator:
-    """Explicit graph-based coordinator using LangChain's RunnableSequence"""
+class Coordinator:
+    """Graph-based coordinator using LangChain's RunnableSequence"""
     
     def __init__(self):
         self.input_validator = InputValidator()
         self.graph = self._build_graph()
-        logger.info("Explicit graph coordinator initialized")
+        logger.info("Graph coordinator initialized")
     
     def _build_graph(self) -> RunnableSequence:
         """Build the explicit processing graph"""
@@ -237,7 +237,7 @@ class ExplicitGraphCoordinator:
             conversation = Conversation(
                 id=conversation_id,
                 user_id=user_id,
-                meta={"source": "explicit_graph_chatbot"}
+                meta={"source": "graph_chatbot"}
             )
             session.add(conversation)
             

@@ -47,17 +47,6 @@ class Message(Base):
     meta = Column(JSON, nullable=True)
 
 
-class MedicalVerification(Base):
-    """Medical verification logs"""
-    __tablename__ = "medical_verifications"
-    
-    id = Column(String, primary_key=True, default=generate_uuid)
-    message_id = Column(String, nullable=False)
-    verification_passed = Column(Boolean, nullable=False)
-    issues_found = Column(JSON, nullable=True)
-    verified_at = Column(DateTime(timezone=True), server_default=func.now())
-
-
 class SecurityLog(Base):
     """Security event logs"""
     __tablename__ = "security_logs"

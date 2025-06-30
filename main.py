@@ -12,7 +12,7 @@ import uvicorn
 from typing import Optional
 
 from src.config import settings
-from src.langchain.explicit_coordinator import ExplicitGraphCoordinator
+from src.langchain.coordinator import Coordinator
 from src.database.connection import init_database
 
 
@@ -20,7 +20,7 @@ from src.database.connection import init_database
 async def lifespan(app: FastAPI):
     """Lifespan event handler for FastAPI application"""
     # Startup
-    logger.info("Starting Kambo Chatbot with explicit graph pattern...")
+    logger.info("Starting Kambo Chatbot with graph pattern...")
     init_database()
     logger.info("Database initialized successfully")
     
@@ -33,13 +33,13 @@ async def lifespan(app: FastAPI):
 # Initialize FastAPI app with lifespan
 app = FastAPI(
     title="Kambo Chatbot API",
-    description="A multi-agent chatbot for Kambo ceremony information using explicit graph pattern",
+    description="A multi-agent chatbot for Kambo ceremony information using graph pattern",
     version="0.3.0",
     lifespan=lifespan
 )
 
-# Initialize explicit graph coordinator
-chatbot = ExplicitGraphCoordinator()
+# Initialize graph coordinator
+chatbot = Coordinator()
 
 
 # Pydantic models for API
@@ -82,7 +82,7 @@ async def health_check():
         "status": "healthy", 
         "version": "0.3.0",
         "app_name": settings.app_name,
-        "framework": "Explicit Graph Pattern"
+        "framework": "Graph Pattern"
     }
 
 
