@@ -273,7 +273,7 @@ audit-logs/
 
 # uv
 .uv/
-uv.lock
+# uv.lock
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -440,7 +440,7 @@ cython_debug/
 
 # uv
 .uv/
-uv.lock
+# uv.lock
 
 # Database
 *.db
