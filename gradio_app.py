@@ -34,8 +34,7 @@ class StreamingCoordinator(Coordinator):
             # Handle different routing outcomes
             if result["routing"]["route"] == "error":
                 yield "I'm sorry, but I cannot process that request. Please rephrase your question."
-                return
-            
+                
             elif result["final_routing"]["route"] == "success":
                 response = result["final_routing"]["response"]
                 
@@ -70,29 +69,22 @@ class StreamingCoordinator(Coordinator):
 streaming_coordinator = StreamingCoordinator()
 
 
-def chat_with_kambo(message, history):
-    """Chat function for Gradio interface"""
+async def chat_with_kambo(message, history):
+    """Chat function for Gradio interface (Gradio messages format)"""
     if not message.strip():
-        return "", history
-    
-    # Add user message to history
-    history.append([message, ""])
-    
-    # Process the message with streaming
-    async def get_response():
-        async for chunk in streaming_coordinator.process_message_stream(message):
-            history[-1][1] = chunk
-            yield history
-    
-    # Run the async function
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    
-    try:
-        for updated_history in loop.run_until_complete(get_response()):
-            yield updated_history
-    finally:
-        loop.close()
+        yield "", history
+        return
+
+    # Add user message in messages format
+    history.append({"role": "user", "content": message})
+
+    # If last message is not assistant, append a new assistant message
+    if not history or history[-1]["role"] != "assistant":
+        history.append({"role": "assistant", "content": ""})
+
+    async for chunk in streaming_coordinator.process_message_stream(message):
+        history[-1]["content"] = chunk
+        yield "", history
 
 
 def create_gradio_interface():
@@ -138,7 +130,8 @@ def create_gradio_interface():
             show_label=False,
             container=True,
             bubble_full_width=False,
-            avatar_images=["👤", "🐸"]
+            avatar_images=["👤", "🐸"],
+            type="messages"
         )
         
         with gr.Row():
@@ -187,7 +180,7 @@ if __name__ == "__main__":
     demo = create_gradio_interface()
     demo.launch(
         server_name="0.0.0.0",
-        server_port=7860,
+        server_port=8090,
         share=False,
         debug=True
     ) 
