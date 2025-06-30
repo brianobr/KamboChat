@@ -69,11 +69,6 @@ class Settings(BaseSettings):
         key_vault_openai_key = get_secret("openai-api-key", "OPENAI_API_KEY")
         if key_vault_openai_key:
             self.openai_api_key = key_vault_openai_key
-        
-        # Load secret key from Key Vault
-        key_vault_secret_key = get_secret("app-secret-key", "SECRET_KEY")
-        if key_vault_secret_key:
-            self.secret_key = key_vault_secret_key
     
     class Config:
         env_file = ".env"

@@ -68,12 +68,6 @@ def test_key_vault_connection():
         else:
             print("❌ OpenAI API key not found in Key Vault or environment")
         
-        app_secret = get_secret("app-secret-key", "SECRET_KEY")
-        if app_secret:
-            print("✅ App secret key retrieved successfully")
-        else:
-            print("❌ App secret key not found in Key Vault or environment")
-        
         return True
         
     except Exception as e:
@@ -111,7 +105,6 @@ def setup_instructions():
     
     print("\n2. 🔑 Add secrets to Key Vault:")
     print("   az keyvault secret set --vault-name kambo-chatbot-vault --name openai-api-key --value 'your_openai_api_key'")
-    print("   az keyvault secret set --vault-name kambo-chatbot-vault --name app-secret-key --value 'your_app_secret'")
     
     print("\n3. 🆔 Enable managed identity for App Service:")
     print("   az webapp identity assign --name kambo-chatbot-app --resource-group kambo-chatbot-rg")

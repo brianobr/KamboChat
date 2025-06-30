@@ -54,7 +54,6 @@ az keyvault create \
 | Secret Name | Value | Description |
 |-------------|-------|-------------|
 | `openai-api-key` | `your_openai_api_key_here` | OpenAI API key |
-| `app-secret-key` | `your_app_secret_key_here` | Application secret key |
 
 ### Using Azure CLI
 
@@ -64,12 +63,6 @@ az keyvault secret set \
   --vault-name kambo-chatbot-vault \
   --name openai-api-key \
   --value "your_openai_api_key_here"
-
-# Add app secret key
-az keyvault secret set \
-  --vault-name kambo-chatbot-vault \
-  --name app-secret-key \
-  --value "your_app_secret_key_here"
 ```
 
 ## Step 3: Enable Managed Identity for App Service
@@ -141,7 +134,6 @@ AZURE_KEY_VAULT_URL=https://kv-kambohealing-scus.vault.azure.net/
 
 ```
 OPENAI_API_KEY=<fallback_openai_key>
-SECRET_KEY=<fallback_secret_key>
 OPENAI_MODEL=gpt-4
 DATABASE_URL=sqlite:///./kambo_chatbot.db
 APP_NAME=Kambo Chatbot
