@@ -70,21 +70,15 @@ async def test_components():
         return False
     
     # Test 5: Medical Verifier
-    print("\n5. Testing medical verifier...")
-    try:
-        from src.agents.medical_verifier import MedicalVerifier
-        verifier = MedicalVerifier()
-        response = await verifier.process({
-            "response": "Kambo is a traditional Amazonian medicine used in ceremonies.",
-            "question": "What is Kambo?",
-            "user_id": "test_user"
-        })
-        print(f"   ✓ Medical verifier working")
-        print(f"   ✓ Verification passed: {response.success}")
-    except Exception as e:
-        print(f"   ✗ Medical verifier error: {e}")
-        traceback.print_exc()
-        return False
+    # Removed: from src.agents.medical_verifier import MedicalVerifier
+    # Removed: verifier = MedicalVerifier()
+    # Removed: response = await verifier.process({
+    #     "response": "Kambo is a traditional Amazonian medicine used in ceremonies.",
+    #     "question": "What is Kambo?",
+    #     "user_id": "test_user"
+    # })
+    # Removed: print(f"   \u2713 Medical verifier working")
+    # Removed: print(f"   \u2713 Verification passed: {response.success}")
     
     # Test 6: Chatbot Coordinator
     print("\n6. Testing chatbot coordinator...")

@@ -76,27 +76,6 @@ class ExplicitGraphCoordinator:
         kambo_prompt = create_kambo_prompt()
         kambo_chain = kambo_prompt | kambo_llm | StrOutputParser()
         
-        # Node 4: Medical Verification
-        medical_llm = create_medical_verifier_llm()
-        medical_prompt = create_medical_verifier_prompt()
-        medical_chain = medical_prompt | medical_llm | StrOutputParser()
-        
-        def parse_verification_result(inputs: Dict[str, Any]) -> Dict[str, Any]:
-            """Parse medical verification result"""
-            verified_response = inputs["medical_verification"].strip()
-            original_response = inputs["kambo_response"]
-            
-            # Check if response was modified (indicating issues)
-            is_safe = verified_response == original_response
-            
-            logger.info(f"Medical verification {'passed' if is_safe else 'failed'}")
-            
-            return {
-                **inputs,
-                "is_safe": is_safe,
-                "final_response": verified_response
-            }
-        
         # Edge 1: Route based on input validation
         def route_after_validation(inputs: Dict[str, Any]) -> Dict[str, Any]:
             """Route to next step based on validation result"""
@@ -127,31 +106,6 @@ class ExplicitGraphCoordinator:
                 "route": "kambo",
                 "question": inputs["safety_result"]["sanitized_message"],
                 "user_id": inputs["safety_result"]["user_id"]
-            }
-        
-        # Edge 3: Route based on medical verification
-        def route_after_verification(inputs: Dict[str, Any]) -> Dict[str, Any]:
-            """Route based on medical verification result"""
-            if not inputs["verification_result"]["is_safe"]:
-                logger.warning("Medical verification failed, providing safe response")
-                return {
-                    "route": "safe_fallback",
-                    "response": "I apologize, but I need to provide a more appropriate response. Please consult with qualified healthcare providers for medical advice.",
-                    "user_id": inputs["verification_result"]["user_id"],
-                    "metadata": {
-                        "medical_verification": "failed",
-                        "original_response": inputs["verification_result"]["kambo_response"]
-                    }
-                }
-            
-            return {
-                "route": "success",
-                "response": inputs["verification_result"]["final_response"],
-                "user_id": inputs["verification_result"]["user_id"],
-                "metadata": {
-                    "medical_verification": "passed",
-                    "model": kambo_llm.model_name
-                }
             }
         
         # Build the explicit graph
@@ -191,27 +145,18 @@ class ExplicitGraphCoordinator:
                 if x["safety_routing"]["route"] == "kambo" else "Not applicable"
             )
             | RunnablePassthrough.assign(
-                # Node 4: Medical Verification (only if Kambo response generated)
-                medical_verification=lambda x: medical_chain.invoke({
-                    "question": x["safety_routing"]["question"],
-                    "response": x["kambo_response"]
-                }) if x["safety_routing"]["route"] == "kambo" else "Not applicable"
-            )
-            | RunnablePassthrough.assign(
-                # Parse verification result
-                verification_result=lambda x: parse_verification_result({
-                    "medical_verification": x["medical_verification"],
-                    "kambo_response": x["kambo_response"],
-                    "user_id": x["safety_routing"]["user_id"]
-                }) if x["safety_routing"]["route"] == "kambo" else {
-                    "is_safe": True,
-                    "final_response": "Not applicable",
+                final_routing=lambda x: {
+                    "route": "success",
+                    "response": x["kambo_response"],
+                    "user_id": x["safety_routing"]["user_id"],
+                    "metadata": {
+                        "model": kambo_llm.model_name
+                    }
+                } if x["safety_routing"]["route"] == "kambo" else {
+                    "route": "reject",
+                    "message": x["safety_routing"]["message"],
                     "user_id": x["safety_routing"]["user_id"]
                 }
-            )
-            | RunnablePassthrough.assign(
-                # Edge 3: Route after verification
-                final_routing=route_after_verification
             )
         )
         
@@ -244,14 +189,6 @@ class ExplicitGraphCoordinator:
                     "response": result["safety_routing"]["message"],
                     "conversation_id": conversation_id,
                     "metadata": {"topic_check": "failed"}
-                }
-            
-            elif result["final_routing"]["route"] == "safe_fallback":
-                return {
-                    "success": True,
-                    "response": result["final_routing"]["response"],
-                    "conversation_id": conversation_id,
-                    "metadata": result["final_routing"]["metadata"]
                 }
             
             elif result["final_routing"]["route"] == "success":
