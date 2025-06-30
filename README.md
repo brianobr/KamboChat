@@ -13,6 +13,8 @@ A multi-agent chatbot system for providing information about Kambo ceremonies an
 - **Database**: Conversation logging and security event tracking
 - **LangChain Integration**: Modern LLM orchestration framework
 - **Azure Key Vault**: Secure secret management for production
+- **Gradio Interface**: Beautiful web UI with streaming responses
+- **FastAPI API**: RESTful API for programmatic access
 
 ## Architecture
 
@@ -141,33 +143,45 @@ uv run python main.py
 - API Documentation: http://localhost:8000/docs
 - Health Check: http://localhost:8000/health
 
-### Alternative: Using uv with virtual environment
+## Gradio Web Interface
 
-If you prefer to work with a virtual environment:
+The chatbot includes a beautiful Gradio web interface with streaming responses for a better user experience.
 
+### Running the Gradio Interface
+
+1. **Install Gradio** (if not already installed):
 ```bash
-# Create and activate virtual environment
-uv venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-
-# Install dependencies
-uv pip install -e .
-
-# Run the application
-python main.py
+uv add gradio
 ```
 
-### Key Vault Setup
-
-For production deployment, use Azure Key Vault for secure secret management:
-
-1. **Test Key Vault setup:**
+2. **Run the Gradio interface**:
 ```bash
-uv run python setup_key_vault.py
+# Option A: Direct run
+uv run python gradio_app.py
+
+# Option B: Using the helper script
+uv run python run_gradio.py
 ```
 
-2. **Follow the detailed setup guide:**
-See [KEY_VAULT_SETUP.md](KEY_VAULT_SETUP.md) for complete instructions.
+3. **Access the web interface**:
+- Open your browser to: http://localhost:7860
+- The interface will show a chat interface with streaming responses
+
+### Gradio Features
+
+- **Streaming Responses**: Responses appear word-by-word for a more engaging experience
+- **Chat History**: Maintains conversation history during the session
+- **Beautiful UI**: Modern, responsive design with custom styling
+- **Topic Filtering**: Built-in filtering for Kambo-related questions
+- **Mobile Friendly**: Works well on mobile devices
+- **Real-time Updates**: No page refreshes needed
+
+### Gradio vs FastAPI
+
+- **Gradio**: Best for end-users, beautiful UI, streaming responses
+- **FastAPI**: Best for developers, programmatic access, API integration
+
+Both interfaces use the same underlying chatbot engine, so responses are consistent.
 
 ## Deployment
 

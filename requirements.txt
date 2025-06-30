@@ -20,6 +20,7 @@ distro==1.9.0
 fastapi==0.115.14
 flake8==7.3.0
 frozenlist==1.7.0
+gradio==4.57.2
 greenlet==3.2.3
 h11==0.16.0
 httpcore==1.0.9
