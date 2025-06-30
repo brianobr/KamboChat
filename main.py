@@ -4,6 +4,7 @@ Main application entry point for the Kambo chatbot
 
 import asyncio
 import os
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from loguru import logger
@@ -15,23 +16,30 @@ from src.langchain.explicit_coordinator import ExplicitGraphCoordinator
 from src.database.connection import init_database
 
 
-# Initialize FastAPI app
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Lifespan event handler for FastAPI application"""
+    # Startup
+    logger.info("Starting Kambo Chatbot with explicit graph pattern...")
+    init_database()
+    logger.info("Database initialized successfully")
+    
+    yield
+    
+    # Shutdown
+    logger.info("Shutting down Kambo Chatbot...")
+
+
+# Initialize FastAPI app with lifespan
 app = FastAPI(
     title="Kambo Chatbot API",
     description="A multi-agent chatbot for Kambo ceremony information using explicit graph pattern",
-    version="0.3.0"
+    version="0.3.0",
+    lifespan=lifespan
 )
 
 # Initialize explicit graph coordinator
 chatbot = ExplicitGraphCoordinator()
-
-# Initialize database on startup
-@app.on_event("startup")
-async def startup_event():
-    """Initialize application on startup"""
-    logger.info("Starting Kambo Chatbot with explicit graph pattern...")
-    init_database()
-    logger.info("Database initialized successfully")
 
 
 # Pydantic models for API
