@@ -1,2 +1,2 @@
 language: python
-startupCommand: "bash startup.sh" 
+startupCommand: "bash startup_pip.sh" 
