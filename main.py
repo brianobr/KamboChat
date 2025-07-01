@@ -149,30 +149,30 @@ async def chat_interface():
         </div>
 
         <script>
-            const chatContainer = document.getElementById('chatContainer');
-            const messageInput = document.getElementById('messageInput');
-            const sendButton = document.getElementById('sendButton');
-            let userId = 'web_user_' + Math.random().toString(36).substr(2, 9);
+            const chatContainer = document.getElementById("chatContainer");
+            const messageInput = document.getElementById("messageInput");
+            const sendButton = document.getElementById("sendButton");
+            let userId = "web_user_" + Math.random().toString(36).substr(2, 9);
 
             function addMessage(content, isUser = false) {
-                const messageDiv = document.createElement('div');
-                messageDiv.className = `message ${isUser ? 'user-message' : 'bot-message'}`;
+                const messageDiv = document.createElement("div");
+                messageDiv.className = `message ${isUser ? "user-message" : "bot-message"}`;
                 messageDiv.textContent = content;
                 chatContainer.appendChild(messageDiv);
                 chatContainer.scrollTop = chatContainer.scrollHeight;
             }
 
             function addLoadingMessage() {
-                const loadingDiv = document.createElement('div');
-                loadingDiv.className = 'message bot-message loading';
-                loadingDiv.id = 'loadingMessage';
-                loadingDiv.textContent = 'Thinking...';
+                const loadingDiv = document.createElement("div");
+                loadingDiv.className = "message bot-message loading";
+                loadingDiv.id = "loadingMessage";
+                loadingDiv.textContent = "Thinking...";
                 chatContainer.appendChild(loadingDiv);
                 chatContainer.scrollTop = chatContainer.scrollHeight;
             }
 
             function removeLoadingMessage() {
-                const loadingMessage = document.getElementById('loadingMessage');
+                const loadingMessage = document.getElementById("loadingMessage");
                 if (loadingMessage) {
                     loadingMessage.remove();
                 }
@@ -182,22 +182,24 @@ async def chat_interface():
                 const message = messageInput.value.trim();
                 if (!message) return;
 
+                console.log("Sending message:", message);
+
                 // Disable input and button
                 messageInput.disabled = true;
                 sendButton.disabled = true;
 
                 // Add user message
                 addMessage(message, true);
-                messageInput.value = '';
+                messageInput.value = "";
 
                 // Add loading message
                 addLoadingMessage();
 
                 try {
-                    const response = await fetch('/api/chat', {
-                        method: 'POST',
+                    const response = await fetch("/api/chat", {
+                        method: "POST",
                         headers: {
-                            'Content-Type': 'application/json',
+                            "Content-Type": "application/json",
                         },
                         body: JSON.stringify({
                             message: message,
@@ -205,7 +207,13 @@ async def chat_interface():
                         })
                     });
 
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
                     const data = await response.json();
+                    
+                    console.log("Received response:", data);
                     
                     // Remove loading message
                     removeLoadingMessage();
@@ -213,11 +221,12 @@ async def chat_interface():
                     if (data.success) {
                         addMessage(data.response);
                     } else {
-                        addMessage('Sorry, I encountered an error: ' + (data.error || 'Unknown error'));
+                        addMessage("I am sorry, I can't answer that question: " + (data.error || "Unknown error"));
                     }
                 } catch (error) {
+                    console.error("Error sending message:", error);
                     removeLoadingMessage();
-                    addMessage('Sorry, I encountered an error: ' + error.message);
+                    addMessage("Sorry, there was an error processing your request: " + error.message);
                 } finally {
                     // Re-enable input and button
                     messageInput.disabled = false;
@@ -227,9 +236,9 @@ async def chat_interface():
             }
 
             // Event listeners
-            sendButton.addEventListener('click', sendMessage);
-            messageInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
+            sendButton.addEventListener("click", sendMessage);
+            messageInput.addEventListener("keypress", function(e) {
+                if (e.key === "Enter") {
                     sendMessage();
                 }
             });
