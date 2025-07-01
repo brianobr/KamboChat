@@ -62,7 +62,23 @@ def create_medical_verifier_prompt() -> ChatPromptTemplate:
     
     system_message_prompt = SystemMessagePromptTemplate.from_template(system_template)
     human_message_prompt = HumanMessagePromptTemplate.from_template(
-        "Original question: {question}\n\nResponse to verify: {response}\n\nPlease verify this response and provide a safe alternative if needed:"
+        """Original question: {question}
+
+Response to verify: {response}
+
+Please analyze this response and determine if it contains medical advice or inappropriate content.
+
+RESPONSE FORMAT:
+- If the response is SAFE (educational, cultural, no medical advice): Respond with "SAFE"
+- If the response contains MEDICAL_ADVICE: Respond with "MEDICAL_ADVICE" followed by specific issues found (DIAGNOSIS, TREATMENT, DOSAGE, CURE, HEAL, etc.)
+
+Examples:
+- Safe response about cultural practices: "SAFE"
+- Response with treatment recommendations: "MEDICAL_ADVICE TREATMENT"
+- Response with healing promises: "MEDICAL_ADVICE HEAL"
+- Response with dosage information: "MEDICAL_ADVICE DOSAGE"
+
+Your analysis:"""
     )
     
     return ChatPromptTemplate.from_messages([system_message_prompt, human_message_prompt])

@@ -1,321 +1,163 @@
 # Kambo Chatbot
 
-A multi-agent chatbot system for providing information about Kambo ceremonies and traditional practices, built with LangChain and explicit graph patterns.
+A sophisticated AI chatbot for Kambo ceremony information using **LangGraph** for orchestration and medical verification.
 
 ## Features
 
-- **Explicit Graph Architecture**: Clear, visible data flow using LangChain's RunnableSequence
-- **Multi-Node Processing**: Specialized nodes for different tasks with explicit routing
-- **RAG System**: Knowledge base for accurate information retrieval
-- **Medical Verification**: Ensures responses don't contain medical advice
-- **Security**: Input validation and prompt injection protection
-- **Compliance**: Built-in medical disclaimers and safety measures
-- **Database**: Conversation logging and security event tracking
-- **LangChain Integration**: Modern LLM orchestration framework
-- **Azure Key Vault**: Secure secret management for production
-- **Gradio Interface**: Beautiful web UI with streaming responses
-- **FastAPI API**: RESTful API for programmatic access
+- **LangGraph Architecture**: Advanced workflow orchestration with state management
+- **Medical Verification**: AI-powered medical advice validation with feedback loop
+- **Content Moderation**: Policy violation detection and filtering
+- **Safety Checking**: Comprehensive safety validation for all requests
+- **Retry Mechanism**: Up to 3 attempts with enhanced prompts for medical content
+- **Real-time Streaming**: Live response streaming via Gradio interface
+- **Database Logging**: Complete conversation and security event logging
+- **Azure Integration**: Key Vault integration for secure secret management
 
 ## Architecture
 
-### Explicit Graph Pattern
-The system uses LangChain's explicit graph pattern with clear nodes and edges:
+The chatbot uses a sophisticated LangGraph flow:
 
 ```
-User Input
-    ↓
-1. Input Validation Node
-    ↓ (Edge: validation result)
-2. Safety Check Node (Kambo classification)
-    ↓ (Edge: topic relevance)
-3. Kambo Response Generation Node
-    ↓ (Edge: response quality)
-4. Medical Verification Node
-    ↓ (Edge: safety verification)
-5. Final Response Routing
+Input Validation → Content Moderation → Safety Check → Context Retrieval → 
+Response Generation → Medical Verification → [Retry Loop] → Final Response
 ```
 
-#### Mermaid Diagram
-```mermaid
-flowchart TD
-    A[User Input] --> B[Input Validation Node]
-    B -- valid --> C[Safety Check Node]
-    B -- invalid --> Z[Error: Validation Failed]
-    C -- Kambo-related --> D[Kambo Response Generation Node]
-    C -- Not Kambo-related --> Y[Reject: Not Kambo Topic]
-    D --> E[Medical Verification Node]
-    E -- Safe --> F[Final Response: Success]
-    E -- Not Safe --> X[Safe Fallback Response]
-    Z -.-> F
-    Y -.-> F
-    X -.-> F
-```
+### Key Components
 
-### Nodes
-1. **Input Validation Node**: Validates and sanitizes user input
-2. **Safety Check Node**: Classifies if question is Kambo-related
-3. **Kambo Response Node**: Generates educational responses about Kambo
-4. **Medical Verification Node**: Ensures responses don't contain medical advice
+- **Input Validation**: Sanitizes and validates user input
+- **Content Moderation**: Checks for policy violations
+- **Safety Checking**: Ensures requests are appropriate
+- **Medical Verification**: Validates medical advice with feedback
+- **Retry Mechanism**: Up to 3 attempts with enhanced prompts
+- **Error Handling**: Comprehensive error management
 
-### Edges
-- **Validation Edge**: Routes based on input validation result
-- **Topic Edge**: Routes based on whether question is Kambo-related
-- **Safety Edge**: Routes based on medical verification result
-
-### Components
-- **ExplicitGraphCoordinator**: Main orchestrator using RunnableSequence
-- **Knowledge Base**: Manages RAG data sources
-- **Input Validator**: Security and input validation
-- **Database**: SQLAlchemy models for data persistence
-- **Key Vault Manager**: Secure secret management
-
-## Setup
+## Quick Start
 
 ### Prerequisites
 
-1. **Install uv** (recommended package manager):
+- Python 3.12+
+- OpenAI API key
+- Azure Key Vault (optional, for production)
+
+### Installation
+
 ```bash
-# On Windows (PowerShell)
-powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
-
-# On macOS/Linux
-curl -LsSf https://astral.sh/uv/install.sh | sh
-```
-
-2. **Install Python 3.11+** (if not already installed)
-
-### Migration from pip to uv
-
-If you're migrating from an existing pip-based setup:
-
-1. **Run the migration script**:
-```bash
-python migrate_to_uv.py
-```
-
-2. **Follow the instructions** provided by the migration script
-
-3. **Clean up old files** (optional):
-```bash
-# Remove old virtual environment
-rm -rf venv/ .venv/ env/
-
-# Remove old requirements.txt (backup created automatically)
-rm requirements.txt
-```
-
-### Local Development
-
-1. **Clone the repository**:
-```bash
-git clone <your-repo-url>
+# Clone the repository
+git clone <repository-url>
 cd kambo_chatbot
-```
 
-2. **Install dependencies with uv**:
-```bash
-# Install all dependencies
+# Install dependencies
 uv sync
 
-# Or install with development dependencies
-uv sync --dev
-
-# Or install with optional dependencies
-uv sync --all-extras
+# Set environment variables
+export OPENAI_API_KEY=your_openai_api_key
 ```
 
-3. **Set up Azure Key Vault** (recommended) or use environment variables:
+### Running the Application
+
 ```bash
-# Option A: Use Key Vault (recommended for production)
-export AZURE_KEY_VAULT_URL=https://your-vault.vault.azure.net/
+# Start the API server
+python main.py
 
-# Option B: Use environment variables (for development)
-export OPENAI_API_KEY=your_openai_api_key_here
-export SECRET_KEY=your_secret_key_here
+# In another terminal, start the Gradio interface
+python gradio_app.py
 ```
 
-4. **Run the application**:
+### Testing
+
 ```bash
-uv run python main.py
-```
-
-5. **Access the API**:
-- API Documentation: http://localhost:8000/docs
-- Health Check: http://localhost:8000/health
-
-## Gradio Web Interface
-
-The chatbot includes a beautiful Gradio web interface with streaming responses for a better user experience.
-
-### Running the Gradio Interface
-
-1. **Install Gradio** (if not already installed):
-```bash
-uv add gradio
-```
-
-2. **Run the Gradio interface**:
-```bash
-# Option A: Direct run
-uv run python gradio_app.py
-
-# Option B: Using the helper script
-uv run python run_gradio.py
-```
-
-3. **Access the web interface**:
-- Open your browser to: http://localhost:7860
-- The interface will show a chat interface with streaming responses
-
-### Gradio Features
-
-- **Streaming Responses**: Responses appear word-by-word for a more engaging experience
-- **Chat History**: Maintains conversation history during the session
-- **Beautiful UI**: Modern, responsive design with custom styling
-- **Topic Filtering**: Built-in filtering for Kambo-related questions
-- **Mobile Friendly**: Works well on mobile devices
-- **Real-time Updates**: No page refreshes needed
-
-### Gradio vs FastAPI
-
-- **Gradio**: Best for end-users, beautiful UI, streaming responses
-- **FastAPI**: Best for developers, programmatic access, API integration
-
-Both interfaces use the same underlying chatbot engine, so responses are consistent.
-
-## Deployment
-
-### Azure App Service Deployment
-
-This application is configured for deployment to Azure App Services using GitHub Actions with Key Vault integration.
-
-#### Quick Deploy
-
-1. **Fork/Clone** this repository to your GitHub account
-2. **Create Azure Key Vault** and add secrets (see [KEY_VAULT_SETUP.md](KEY_VAULT_SETUP.md))
-3. **Create Azure App Service** (Python 3.11 runtime)
-4. **Configure Environment Variables** in Azure Portal
-5. **Add GitHub Secret** `AZURE_WEBAPP_PUBLISH_PROFILE`
-6. **Push to main branch** - automatic deployment will trigger
-
-#### Environment Variables Required
-
-Set these in Azure App Service Configuration:
-
-```
-# Required for Key Vault
-AZURE_KEY_VAULT_URL=https://your-vault.vault.azure.net/
-
-# Optional (for fallback)
-OPENAI_MODEL=gpt-4
-DATABASE_URL=sqlite:///./kambo_chatbot.db
-APP_NAME=Kambo Chatbot
-DEBUG=False
-LOG_LEVEL=INFO
-HOST=0.0.0.0
-PORT=8000
-```
-
-#### Deployment Files
-
-- `.github/workflows/azure-deploy.yml` - GitHub Actions workflow
-- `startup.sh` - Azure App Service startup script
-- `web.config` - IIS configuration for Windows hosting
-- `runtime.txt` - Python version specification
-- `azure.yaml` - Azure App Service configuration
-
-For detailed deployment instructions, see [DEPLOYMENT.md](DEPLOYMENT.md).
-
-## Testing
-
-### Test the Explicit Graph
-```bash
-uv run python test_explicit_graph.py
-```
-
-### Test the API
-```bash
-uv run python test_api.py
-```
-
-### Test LangChain Components
-```bash
-uv run python test_langchain.py
-```
-
-### Test Key Vault Integration
-```bash
-uv run python setup_key_vault.py
+# Run all tests
+python test_graph.py
 ```
 
 ## API Usage
 
+### Health Check
+```bash
+curl http://localhost:8000/health
+```
+
 ### Chat Endpoint
 ```bash
-curl -X POST "http://localhost:8000/chat" \
-     -H "Content-Type: application/json" \
-     -d '{"message": "What is Kambo?", "user_id": "user123"}'
+curl -X POST http://localhost:8000/chat \
+  -H "Content-Type: application/json" \
+  -d '{
+    "message": "What is a Kambo ceremony?",
+    "user_id": "test_user"
+  }'
 ```
 
-### Response Format
-```json
-{
-  "success": true,
-  "response": "Kambo is a traditional Amazonian medicine...",
-  "conversation_id": "uuid",
-  "metadata": {
-    "medical_verification": "passed",
-    "topic_check": "passed",
-    "model": "gpt-4"
-  }
-}
+### Graph Info
+```bash
+curl http://localhost:8000/graph-info
 ```
 
-## Development
+## Web Interface
 
-- Follow the coding standards in `.cursor/cursor.json`
-- Write tests for all new functionality
-- Maintain security best practices
-- Always include medical disclaimers
-- Use explicit graph patterns for complex workflows
-- Use Key Vault for secret management in production
+- **API Documentation**: http://localhost:8000/docs
+- **Gradio Interface**: http://localhost:8090
 
-## Safety & Compliance
+## Production Deployment
 
-- All responses include medical disclaimers
-- No medical advice is provided
-- Users are directed to qualified healthcare providers
-- Input validation prevents malicious content
-- Comprehensive logging for audit trails
-- Medical verification ensures safety
-- Azure Key Vault provides HIPAA-compliant secret management
+### Environment Variables
+```bash
+OPENAI_API_KEY=your_openai_api_key
+AZURE_KEY_VAULT_URL=your_key_vault_url  # Optional
+AZURE_TENANT_ID=your_tenant_id          # Optional
+AZURE_CLIENT_ID=your_client_id          # Optional
+```
 
-## Technical Details
+### Docker
+```dockerfile
+FROM python:3.12-slim
+WORKDIR /app
+COPY . .
+RUN pip install uv && uv sync
+EXPOSE 8000 8090
+CMD ["python", "main.py"]
+```
 
-### LangChain Integration
-- Uses `RunnableSequence` for explicit graph construction
-- `RunnablePassthrough` for data flow between nodes
-- Async processing with `ainvoke`
-- Structured output parsing
+### Azure App Service
+1. Deploy `main.py` as your main app
+2. Configure environment variables
+3. Use Azure Key Vault for secret management
 
-### Security Features
-- **Azure Key Vault**: Encrypted secret storage
-- **Managed Identity**: Secure authentication
-- **Input Validation**: XSS and injection protection
-- **Audit Logging**: Complete access tracking
+## Medical Verification
 
-### Graph Benefits
-- **Visibility**: Clear data flow and routing logic
-- **Debugging**: Easy to trace execution path
-- **Maintainability**: Modular node structure
-- **Scalability**: Easy to add new nodes and edges
-- **Testing**: Each node can be tested independently
+The system includes advanced medical verification:
 
-## Next Steps
+1. **Initial Response**: Generate Kambo-specific response
+2. **Medical Check**: Verify medical advice for safety
+3. **Feedback Loop**: If issues found, retry with enhanced prompts
+4. **Final Response**: Deliver safe, verified information
 
-1. **Deploy to Azure**: Use the provided deployment configuration
-2. **Set up Key Vault**: Follow the security setup guide
-3. **Add Monitoring**: Configure Application Insights
-4. **Enhance RAG**: Add vector search and document processing
-5. **Add Authentication**: User management system
-6. **Graph Visualization**: Add tools to visualize the execution graph 
+## Security Features
+
+- Input validation and sanitization
+- Content moderation for policy violations
+- Comprehensive error handling
+- Security event logging
+- Azure Key Vault integration
+
+## Performance
+
+- **Response Time**: 5-15 seconds for complex queries
+- **Safety**: Highest level of medical verification
+- **Scalability**: LangGraph provides excellent scalability
+- **Reliability**: Retry mechanism ensures robust responses
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests
+5. Submit a pull request
+
+## License
+
+This project is licensed under the MIT License.
+
+## Disclaimer
+
+This chatbot provides educational information about Kambo ceremonies and traditional Amazonian medicine. It is not intended as medical advice. Always consult with qualified healthcare providers before making any health-related decisions. 

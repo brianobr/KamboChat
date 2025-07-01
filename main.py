@@ -20,7 +20,7 @@ from src.database.connection import init_database
 async def lifespan(app: FastAPI):
     """Lifespan event handler for FastAPI application"""
     # Startup
-    logger.info("Starting Kambo Chatbot with graph pattern...")
+    logger.info("Starting Kambo Chatbot with LangGraph...")
     init_database()
     logger.info("Database initialized successfully")
     
@@ -33,12 +33,12 @@ async def lifespan(app: FastAPI):
 # Initialize FastAPI app with lifespan
 app = FastAPI(
     title="Kambo Chatbot API",
-    description="A multi-agent chatbot for Kambo ceremony information using graph pattern",
+    description="A multi-agent chatbot for Kambo ceremony information using LangGraph",
     version="0.3.0",
     lifespan=lifespan
 )
 
-# Initialize graph coordinator
+# Initialize LangGraph coordinator
 chatbot = Coordinator()
 
 
@@ -82,7 +82,7 @@ async def health_check():
         "status": "healthy", 
         "version": "0.3.0",
         "app_name": settings.app_name,
-        "framework": "Graph Pattern"
+        "framework": "LangGraph"
     }
 
 
@@ -90,7 +90,7 @@ async def health_check():
 async def root():
     """Root endpoint"""
     return {
-        "message": "Kambo Chatbot API with Explicit Graph Pattern",
+        "message": "Kambo Chatbot API with LangGraph",
         "version": "0.3.0",
         "docs": "/docs"
     }

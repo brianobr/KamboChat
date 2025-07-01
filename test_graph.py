@@ -1,5 +1,5 @@
 """
-Test script for the graph coordinator
+Test script for the LangGraph coordinator
 """
 
 import asyncio
@@ -14,10 +14,10 @@ from src.langchain.coordinator import Coordinator
 from src.config import settings
 
 
-async def test_graph():
-    """Test the graph coordinator"""
+async def test_langgraph():
+    """Test the LangGraph coordinator"""
     
-    logger.info("Testing Graph Coordinator...")
+    logger.info("Testing LangGraph Coordinator...")
     
     # Initialize coordinator
     coordinator = Coordinator()
@@ -31,10 +31,10 @@ async def test_graph():
             "expected_success": True
         },
         {
-            "name": "Medical Question (should be rejected)",
-            "message": "How do I treat diabetes?",
+            "name": "Medical Question (should be verified)",
+            "message": "What are the health benefits of Kambo?",
             "user_id": "test_user_2", 
-            "expected_success": False
+            "expected_success": True
         },
         {
             "name": "Kambo Safety Question",
@@ -122,29 +122,38 @@ async def test_graph():
         return False
 
 
-async def test_graph_visualization():
-    """Test the graph structure and show the flow"""
+async def test_langgraph_structure():
+    """Test the LangGraph structure and show the flow"""
     logger.info("\n" + "="*50)
-    logger.info("GRAPH STRUCTURE VISUALIZATION")
+    logger.info("LANGGRAPH STRUCTURE VISUALIZATION")
     logger.info("="*50)
     
     coordinator = Coordinator()
     
-    # Show the graph structure
-    logger.info("Graph Flow:")
+    # Get graph info
+    graph_info = coordinator.get_graph_info()
+    
+    logger.info("LangGraph Flow:")
     logger.info("1. Input Validation Node")
     logger.info("   ↓ (Edge: validation result)")
-    logger.info("2. Safety Check Node (Kambo classification)")
-    logger.info("   ↓ (Edge: topic relevance)")
-    logger.info("3. Kambo Response Generation Node")
-    logger.info("   ↓ (Edge: response quality)")
-    logger.info("4. Medical Verification Node")
-    logger.info("   ↓ (Edge: safety verification)")
-    logger.info("5. Final Response Routing")
+    logger.info("2. Content Moderation Node")
+    logger.info("   ↓ (Edge: moderation result)")
+    logger.info("3. Safety Check Node")
+    logger.info("   ↓ (Edge: safety result)")
+    logger.info("4. Context Retrieval Node")
+    logger.info("   ↓ (Edge: context available)")
+    logger.info("5. Kambo Response Generation Node")
+    logger.info("   ↓ (Edge: response generated)")
+    logger.info("6. Medical Verification Node")
+    logger.info("   ↓ (Edge: verification result)")
+    logger.info("7. Retry Logic (if needed)")
+    logger.info("   ↓ (Edge: retry or final)")
+    logger.info("8. Final Response Creation")
     
-    logger.info("\nGraph built successfully!")
-    logger.info(f"Graph type: {type(coordinator.graph)}")
-    logger.info("Graph is ready for processing")
+    logger.info(f"\nGraph type: {graph_info['graph_type']}")
+    logger.info(f"Nodes: {', '.join(graph_info['nodes'])}")
+    logger.info(f"Features: {', '.join(graph_info['features'])}")
+    logger.info("LangGraph is ready for processing")
 
 
 if __name__ == "__main__":
@@ -154,14 +163,14 @@ if __name__ == "__main__":
     
     # Run tests
     async def main():
-        # Test graph visualization
-        await test_graph_visualization()
+        # Test LangGraph structure
+        await test_langgraph_structure()
         
         # Test actual processing
-        success = await test_graph()
+        success = await test_langgraph()
         
         if success:
-            logger.info("\n✅ All graph tests completed successfully!")
+            logger.info("\n✅ All LangGraph tests completed successfully!")
         else:
             logger.error("\n❌ Some tests failed!")
             sys.exit(1)

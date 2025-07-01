@@ -25,21 +25,37 @@ class StreamingCoordinator(Coordinator):
         conversation_id = str(uuid.uuid4())
         
         try:
-            # Execute the graph
-            result = await self.graph.ainvoke({
+            # Initialize state for LangGraph
+            initial_state = {
+                "messages": [],
                 "user_message": user_message,
-                "user_id": user_id or "anonymous"
-            })
+                "user_id": user_id or "anonymous",
+                "conversation_id": conversation_id,
+                "validation_result": None,
+                "moderation_result": None,
+                "safety_check_result": None,
+                "rag_context": None,
+                "kambo_response": None,
+                "medical_verification_result": None,
+                "medical_verification_attempts": 0,
+                "medical_verification_feedback": [],
+                "final_response": None,
+                "error": None,
+                "metadata": None
+            }
             
-            # Handle different routing outcomes
-            if result["routing"]["route"] == "error":
+            # Execute the LangGraph
+            result = await self.graph.ainvoke(initial_state)
+            
+            # Get the final response
+            final_response = result.get("final_response", "I apologize, but I encountered an error processing your request.")
+            error = result.get("error")
+            
+            if error:
                 yield "I'm sorry, but I cannot process that request. Please rephrase your question."
-                
-            elif result["final_routing"]["route"] == "success":
-                response = result["final_routing"]["response"]
-                
+            else:
                 # Stream the response word by word
-                words = response.split()
+                words = final_response.split()
                 partial_response = ""
                 
                 for i, word in enumerate(words):
@@ -52,13 +68,10 @@ class StreamingCoordinator(Coordinator):
                 # Save to database asynchronously
                 asyncio.create_task(self._save_conversation_async(
                     conversation_id, 
-                    result["final_routing"]["user_id"], 
+                    user_id or "anonymous", 
                     user_message, 
-                    response
+                    final_response
                 ))
-                
-            else:
-                yield "I apologize, but I encountered an unexpected error. Please try again."
                 
         except Exception as e:
             logger.error(f"Error in streaming coordinator: {e}")

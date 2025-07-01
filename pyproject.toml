@@ -24,6 +24,7 @@ dependencies = [
     "langchain-community>=0.3.0",
     "openai>=1.58.1",
     "gradio>=5.35.0",
+    "langgraph>=0.5.0",
 ]
 
 [project.optional-dependencies]
