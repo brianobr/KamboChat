@@ -21,16 +21,19 @@ class StreamingCoordinator(Coordinator):
     """Coordinator with streaming capabilities for Gradio"""
     
     async def process_message_stream(self, user_message: str, user_id: str = None):
-        """Process a user message with streaming response"""
+        logger.info(f"[Gradio] process_message_stream called with user_message='{user_message}', user_id='{user_id}'")
         conversation_id = str(uuid.uuid4())
+        user_id = user_id or "anonymous"
         
         try:
-            # Initialize state for LangGraph
+            conversation_history = self._load_conversation_history(user_id)
+            logger.info(f"[Gradio] Loaded conversation history: {conversation_history}")
             initial_state = {
                 "messages": [],
                 "user_message": user_message,
-                "user_id": user_id or "anonymous",
+                "user_id": user_id,
                 "conversation_id": conversation_id,
+                "conversation_history": conversation_history,
                 "validation_result": None,
                 "moderation_result": None,
                 "safety_check_result": None,
@@ -43,38 +46,29 @@ class StreamingCoordinator(Coordinator):
                 "error": None,
                 "metadata": None
             }
-            
-            # Execute the LangGraph
+            logger.info("[Gradio] Awaiting self.graph.ainvoke(initial_state)")
             result = await self.graph.ainvoke(initial_state)
-            
-            # Get the final response
+            logger.info(f"[Gradio] LangGraph result: {result}")
             final_response = result.get("final_response", "I apologize, but I encountered an error processing your request.")
             error = result.get("error")
-            
             if error:
+                logger.error(f"[Gradio] Error in result: {error}")
                 yield "I'm sorry, but I cannot process that request. Please rephrase your question."
             else:
-                # Stream the response word by word
                 words = final_response.split()
                 partial_response = ""
-                
                 for i, word in enumerate(words):
                     partial_response += word + " "
                     yield partial_response.strip()
-                    
-                    # Small delay for streaming effect
                     await asyncio.sleep(0.05)
-                
-                # Save to database asynchronously
                 asyncio.create_task(self._save_conversation_async(
                     conversation_id, 
-                    user_id or "anonymous", 
+                    user_id, 
                     user_message, 
                     final_response
                 ))
-                
         except Exception as e:
-            logger.error(f"Error in streaming coordinator: {e}")
+            logger.error(f"[Gradio] Exception in process_message_stream: {e}")
             yield "I apologize, but I encountered an error processing your request. Please try again."
 
 
@@ -83,8 +77,9 @@ streaming_coordinator = StreamingCoordinator()
 
 
 async def chat_with_kambo(message, history):
-    """Chat function for Gradio interface (Gradio messages format)"""
+    logger.info(f"[Gradio] chat_with_kambo called with message='{message}' and history={history}")
     if not message.strip():
+        logger.info("[Gradio] Empty message, returning early.")
         yield "", history
         return
 
@@ -95,9 +90,16 @@ async def chat_with_kambo(message, history):
     if not history or history[-1]["role"] != "assistant":
         history.append({"role": "assistant", "content": ""})
 
-    async for chunk in streaming_coordinator.process_message_stream(message):
-        history[-1]["content"] = chunk
-        yield "", history
+    try:
+        logger.info("[Gradio] Entering async for chunk in process_message_stream...")
+        async for chunk in streaming_coordinator.process_message_stream(message):
+            logger.info(f"[Gradio] Yielding chunk: {chunk}")
+            history[-1]["content"] = chunk
+            yield "", history
+        logger.info("[Gradio] Finished streaming response.")
+    except Exception as e:
+        logger.error(f"[Gradio] Exception in chat_with_kambo: {e}")
+        yield "Sorry, there was an error processing your request.", history
 
 
 def create_gradio_interface():
@@ -179,21 +181,7 @@ def create_gradio_interface():
         gr.Markdown("""
         ---
         **Disclaimer:** This chatbot provides educational information about Kambo ceremonies and traditional Amazonian medicine. 
-        It is not intended as medical advice. Always consult with qualified healthcare providers before making any health-related decisions.
+        It is not intended as medical advice. Always consult with qualified healthcare providers for medical advice.
         """)
     
-    return demo
-
-
-if __name__ == "__main__":
-    # Initialize database
-    init_database()
-    
-    # Create and launch the Gradio interface
-    demo = create_gradio_interface()
-    demo.launch(
-        server_name="0.0.0.0",
-        server_port=8090,
-        share=False,
-        debug=True
-    ) 
+    return demo 

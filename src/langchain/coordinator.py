@@ -21,11 +21,12 @@ from src.database.models import Conversation, Message, SecurityLog
 
 
 class ChatState(TypedDict):
-    """State for the LangGraph chat flow with medical verification feedback loop"""
+    """State for the LangGraph chat flow with medical verification feedback loop and memory"""
     messages: Annotated[list, add_messages]
     user_message: str
     user_id: str
     conversation_id: str
+    conversation_history: List[Dict[str, str]]  # New: conversation history
     validation_result: Optional[Dict[str, Any]]
     moderation_result: Optional[Dict[str, Any]]
     safety_check_result: Optional[bool]
@@ -40,12 +41,12 @@ class ChatState(TypedDict):
 
 
 class Coordinator:
-    """LangGraph-based coordinator with medical verification feedback loop"""
+    """LangGraph-based coordinator with medical verification feedback loop and conversation memory"""
     
     def __init__(self):
         self.input_validator = InputValidator()
         self.graph = self._build_graph()
-        logger.info("LangGraph coordinator initialized")
+        logger.info("LangGraph coordinator with memory initialized")
     
     def _build_graph(self) -> StateGraph:
         """Build the LangGraph processing flow"""
@@ -590,18 +591,22 @@ class Coordinator:
             return "fail"
     
     async def process_message(self, user_message: str, user_id: str = None) -> Dict[str, Any]:
-        """Process a user message through the LangGraph"""
+        """Process a user message through the LangGraph with memory"""
         
         conversation_id = str(uuid.uuid4())
         user_id = user_id or "anonymous"
         
         try:
-            # Initialize state
+            # Load conversation history
+            conversation_history = self._load_conversation_history(user_id)
+            
+            # Initialize state with memory
             initial_state = {
                 "messages": [HumanMessage(content=user_message)],
                 "user_message": user_message,
                 "user_id": user_id,
                 "conversation_id": conversation_id,
+                "conversation_history": conversation_history,  # Include history
                 "validation_result": None,
                 "moderation_result": None,
                 "safety_check_result": None,
@@ -756,4 +761,80 @@ class Coordinator:
                 "Enhanced response generation",
                 "Comprehensive error handling"
             ]
-        } 
+        }
+    
+    def _load_conversation_history(self, user_id: str, limit: int = 10) -> List[Dict[str, str]]:
+        """Load recent conversation history for a user"""
+        try:
+            session = get_session()
+            
+            # Get recent conversations for this user
+            conversations = session.query(Conversation).filter(
+                Conversation.user_id == user_id
+            ).order_by(Conversation.started_at.desc()).limit(5).all()
+            
+            conversation_ids = [conv.id for conv in conversations]
+            
+            if not conversation_ids:
+                return []
+            
+            # Get messages from these conversations
+            messages = session.query(Message).filter(
+                Message.conversation_id.in_(conversation_ids)
+            ).order_by(Message.created_at.asc()).limit(limit).all()
+            
+            # Convert to format for AI context
+            history = []
+            for msg in messages:
+                history.append({
+                    "role": msg.role,
+                    "content": msg.content,
+                    "timestamp": msg.created_at.isoformat()
+                })
+            
+            session.close()
+            logger.info(f"Loaded {len(history)} messages from conversation history for user {user_id}")
+            return history
+            
+        except Exception as e:
+            logger.error(f"Error loading conversation history: {e}")
+            return []
+    
+    def _extract_user_context(self, history: List[Dict[str, str]]) -> Dict[str, Any]:
+        """Extract useful context from conversation history"""
+        context = {
+            "user_name": None,
+            "topics_discussed": [],
+            "preferences": [],
+            "previous_questions": []
+        }
+        
+        # Look for name mentions
+        for msg in history:
+            if msg["role"] == "user":
+                content = msg["content"].lower()
+                # Simple name extraction patterns
+                if "my name is" in content:
+                    name_start = content.find("my name is") + 11
+                    name_end = content.find(" ", name_start)
+                    if name_end == -1:
+                        name_end = len(content)
+                    context["user_name"] = content[name_start:name_end].strip().title()
+                elif "i'm " in content and len(content.split()) <= 5:
+                    # Simple "I'm Alex" pattern
+                    words = content.split()
+                    if len(words) >= 2 and words[0] == "i'm":
+                        context["user_name"] = words[1].title()
+                
+                # Track topics
+                if "kambo" in content:
+                    context["topics_discussed"].append("kambo")
+                if "ceremony" in content:
+                    context["topics_discussed"].append("ceremony")
+                if "matt" in content or "o'brien" in content:
+                    context["topics_discussed"].append("matt_o_brien")
+                
+                # Track previous questions
+                context["previous_questions"].append(msg["content"])
+        
+        return context 
