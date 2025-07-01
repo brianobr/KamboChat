@@ -254,10 +254,17 @@ class Coordinator:
             
             logger.info(f"Safety check result: {'Kambo-related' if is_kambo_related else 'Not Kambo-related'}")
             
-            return {
-                **state,
-                "safety_check_result": is_kambo_related
-            }
+            if is_kambo_related:
+                return {
+                    **state,
+                    "safety_check_result": True
+                }
+            else:
+                return {
+                    **state,
+                    "safety_check_result": False,
+                    "error": "safety_check_failed: Question is not Kambo-related"
+                }
             
         except Exception as e:
             logger.error(f"Error in safety check: {e}")
@@ -526,7 +533,9 @@ class Coordinator:
             error_message = "An unexpected error occurred"
         
         # Create appropriate error response based on the error type
-        if "validation" in error_message.lower():
+        if error_message and "safety_check_failed" in error_message:
+            final_response = "I can only provide information about Kambo ceremonies and traditional practices. Please ask a Kambo-related question."
+        elif "validation" in error_message.lower():
             final_response = "I'm sorry, but I cannot process that request. Please rephrase your question."
         elif "moderation" in error_message.lower():
             final_response = "I'm sorry, but your message violates our content policy. Please rephrase your question."
